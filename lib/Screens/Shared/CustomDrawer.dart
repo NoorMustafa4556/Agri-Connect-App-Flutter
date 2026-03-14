@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../utils/app_colors.dart';
+import '../../Providers/AuthProvider.dart';
+import '../Auth/LoginScreen.dart';
+import '../Farmer/FarmerDashboard.dart';
+import '../Owner/OwnerDashboard.dart';
+import 'ProfileScreen.dart';
+import 'ChangePasswordScreen.dart';
+import '../Farmer/FarmerHistoryScreen.dart';
+
+class CustomDrawer extends StatelessWidget {
+  final bool isFarmer;
+
+  const CustomDrawer({Key? key, required this.isFarmer}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Consumer<AuthProvider>(
+            builder: (context, auth, child) {
+              final String name = auth.userName ?? (isFarmer ? 'Farmer' : 'Owner');
+              final String email = auth.user?.email ?? 'Loading...';
+              
+              return UserAccountsDrawerHeader(
+                decoration: const BoxDecoration(color: AppColors.primary),
+                accountName: Text(
+                  name,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                accountEmail: Text(email),
+                currentAccountPicture: const CircleAvatar(
+                  backgroundColor: AppColors.white,
+                  child: Icon(Icons.person, color: AppColors.primary, size: 40),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.home, color: AppColors.textDark),
+            title: const Text('Home'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => isFarmer ? const FarmerDashboard() : const OwnerDashboard(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_outline, color: AppColors.textDark),
+            title: const Text('My Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.history, color: AppColors.textDark),
+            title: const Text('Request History'),
+            onTap: () {
+               Navigator.pop(context);
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmerHistoryScreen()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock_outline, color: AppColors.textDark),
+            title: const Text('Change Password'),
+            onTap: () {
+               Navigator.pop(context);
+               Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: AppColors.error),
+            title: const Text('Logout', style: TextStyle(color: AppColors.error)),
+            onTap: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
