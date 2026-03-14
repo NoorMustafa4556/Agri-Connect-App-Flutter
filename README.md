@@ -6,7 +6,6 @@ The app offers dedicated role-based dashboards, location-based equipment filteri
 
 ---
 
-
 ## Why AgriConnect?
 For many small to medium-scale farmers, purchasing heavy farm machinery is financially out of reach. AgriConnect solves this by creating a localized sharing economy. Equipment owners can monetize their idle machinery, and farmers can rent what they need, exactly when they need it. It's a win-win for the agricultural ecosystem!
 
