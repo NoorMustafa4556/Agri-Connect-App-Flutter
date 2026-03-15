@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
-import '../../utils/asset_manager.dart';
+import '../../utils/AppColors.dart';
+import '../../utils/AssetManager.dart';
 import '../../Providers/AuthProvider.dart';
 import '../Farmer/FarmerDashboard.dart';
 import '../Owner/OwnerDashboard.dart';
@@ -17,10 +20,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool isFarmer = true; // true = Farmer, false = Owner
   bool _obscurePassword = true;
 
+  final _formKey = GlobalKey<FormState>();
+  
   // Controllers
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _rentController = TextEditingController();
   
   // Dropdown States
   String? _selectedArea;
@@ -28,17 +35,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedEquipmentType;
   String? _selectedEquipmentImageRef;
 
-  final List<String> _areas = ['Lahore', 'Karachi', 'Islamabad', 'Multan', 'Faisalabad'];
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _rentController.dispose();
+    super.dispose();
+  }
 
   void _register() async {
-    if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty || _selectedArea == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all mandatory fields')));
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedArea == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select Area.')));
       return;
     }
 
     if (!isFarmer) {
       if (_selectedEquipmentName == null || _selectedEquipmentType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select equipment details')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select equipment details.')));
         return;
       }
     }
@@ -50,12 +69,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
         fullName: _nameController.text.trim(),
         role: isFarmer ? 'Farmer' : 'Owner',
         city: _selectedArea!,
+        phone: _phoneController.text.trim(),
         context: context,
       );
 
-      // Note: We might also want to save the equipment info immediately to the `equipment` collection here for owners,
-      // but for now the user can add equipment later via AddEquipmentScreen. 
-      // The requirement was just that they can see & select the pictures.
+      // If Owner, save the initial equipment directly to Firestore collection
+      if (!isFarmer && _selectedEquipmentName != null) {
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        if (userId != null) {
+          await FirebaseFirestore.instance.collection('equipment').add({
+             'ownerId': userId,
+             'ownerName': _nameController.text.trim(),
+             'name': '${_selectedEquipmentName} ($_selectedEquipmentType)',
+             'category': _selectedEquipmentName,
+             'city': _selectedArea,
+             'assetImageRef': _selectedEquipmentImageRef ?? AssetManager.getEquipmentImage(_selectedEquipmentName!),
+             'pricePerDay': _rentController.text.trim(),
+             'specs': 'Listed during registration',
+             'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
       
       if (!mounted) return;
       
@@ -165,158 +199,207 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // Form Fields
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _buildTextField(_nameController, Icons.person, 'Full Name'),
-                  const SizedBox(height: 15),
-                  _buildTextField(_emailController, Icons.email, 'Email'),
-                  const SizedBox(height: 15),
-                  
-                  // Common Area Dropdown
-                  _buildDropdown(
-                    icon: Icons.location_on,
-                    hint: 'Select Area',
-                    value: _selectedArea,
-                    items: _areas,
-                    onChanged: (val) => setState(() => _selectedArea = val),
-                  ),
-
-                  // Owner specific fields
-                  if (!isFarmer) ...[
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildTextField(
+                      controller: _nameController, 
+                      icon: Icons.person, 
+                      hint: 'Full Name',
+                      validator: (value) => (value == null || value.trim().isEmpty) ? 'Full Name is required' : null,
+                    ),
                     const SizedBox(height: 15),
-                    _buildDropdown(
-                      icon: Icons.agriculture,
-                      hint: 'Equipment Category',
-                      value: _selectedEquipmentName,
-                      items: AssetManager.categories,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedEquipmentName = val;
-                          _selectedEquipmentImageRef = null; // Reset image when category changes
-                        });
+                    _buildTextField(
+                      controller: _emailController, 
+                      icon: Icons.email, 
+                      hint: 'Email',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) return 'Email is required';
+                        if (!value.contains('@') || !value.contains('.')) return 'Enter a valid email';
+                        return null;
                       },
                     ),
                     const SizedBox(height: 15),
-                    _buildDropdown(
-                      icon: Icons.settings,
-                      hint: 'Equipment Specs / Type',
-                      value: _selectedEquipmentType,
-                      items: ['Diesel', 'Petrol', 'Electric', 'Manual'],
-                      onChanged: (val) => setState(() => _selectedEquipmentType = val),
+                    _buildTextField(
+                      controller: _phoneController, 
+                      icon: Icons.phone, 
+                      hint: 'Phone Number (11 digits)', 
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)],
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) return 'Phone number is required';
+                        if (value.length != 11) return 'Phone number must be exactly 11 digits';
+                        return null;
+                      },
                     ),
+                    const SizedBox(height: 15),
                     
-                    // Dynamic Image Gallery for Owner Equipment
-                    if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isNotEmpty) ...[
+                    // Common Area Dropdown
+                    _buildDropdown(
+                      icon: Icons.location_on,
+                      hint: 'Select Area',
+                      value: _selectedArea,
+                      items: AssetManager.areas,
+                      onChanged: (val) => setState(() => _selectedArea = val),
+                    ),
+
+                    // Owner specific fields
+                    if (!isFarmer) ...[
                       const SizedBox(height: 15),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                      _buildDropdown(
+                        icon: Icons.agriculture,
+                        hint: 'Equipment Category',
+                        value: _selectedEquipmentName,
+                        items: AssetManager.categories,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedEquipmentName = val;
+                            _selectedEquipmentImageRef = null; // Reset image when category changes
+                          });
+                        },
                       ),
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 100,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: AssetManager.getImagesForCategory(_selectedEquipmentName!).length,
-                          itemBuilder: (context, index) {
-                            String imagePath = AssetManager.getImagesForCategory(_selectedEquipmentName!)[index];
-                            bool isSelected = _selectedEquipmentImageRef == imagePath;
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedEquipmentImageRef = imagePath;
-                                });
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: isSelected ? AppColors.primary : Colors.transparent,
-                                    width: 3,
+                      const SizedBox(height: 15),
+                      _buildDropdown(
+                        icon: Icons.settings,
+                        hint: 'Equipment Specs / Type',
+                        value: _selectedEquipmentType,
+                        items: AssetManager.equipmentTypes,
+                        onChanged: (val) => setState(() => _selectedEquipmentType = val),
+                      ),
+                      const SizedBox(height: 15),
+                      _buildTextField(
+                        controller: _rentController, 
+                        icon: Icons.monetization_on, 
+                        hint: 'Rent per Day (Rs)', 
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Rent per day is required';
+                          if (int.tryParse(value) == null || int.parse(value) <= 0) return 'Enter a valid amount over 0';
+                          return null;
+                        },
+                      ),
+                      
+                      // Dynamic Image Gallery for Owner Equipment
+                      if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isNotEmpty) ...[
+                        const SizedBox(height: 15),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          height: 100,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: AssetManager.getImagesForCategory(_selectedEquipmentName!).length,
+                            itemBuilder: (context, index) {
+                              String imagePath = AssetManager.getImagesForCategory(_selectedEquipmentName!)[index];
+                              bool isSelected = _selectedEquipmentImageRef == imagePath;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedEquipmentImageRef = imagePath;
+                                  });
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: isSelected ? AppColors.primary : Colors.transparent,
+                                      width: 3,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(7),
-                                  child: Image.asset(
-                                    imagePath,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(7),
+                                    child: Image.asset(
+                                      imagePath,
                                       width: 100,
-                                      color: Colors.grey[300],
-                                      child: const Icon(Icons.image_not_supported),
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        width: 100,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.image_not_supported),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                    ],
-                    if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text('No images found in assets/images/$_selectedEquipmentName', style: const TextStyle(color: Colors.red)),
-                    ]
-                  ],
-
-                  const SizedBox(height: 15),
-                  
-                  // Password Field
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: AppColors.textLight,
+                              );
+                            },
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                        hintText: 'Password',
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                        )
+                      ],
+                      if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text('No images found in assets/images/$_selectedEquipmentName', style: const TextStyle(color: Colors.red)),
+                      ]
+                    ],
+
+                    const SizedBox(height: 15),
+                    
+                    // Password Field
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                        borderRadius: BorderRadius.circular(5),
                       ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 30),
-                  
-                  // Register Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.textLight,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          hintText: 'Password',
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15),
                         ),
-                      ),
-                      child: Consumer<AuthProvider>(
-                        builder: (context, auth, child) {
-                          return auth.isLoading
-                              ? const CircularProgressIndicator(color: AppColors.white)
-                              : const Text(
-                                  'REGISTER',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.white),
-                                );
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Password is required';
+                          if (value.length < 6) return 'Password must be at least 6 characters';
+                          return null;
                         },
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                ],
+                    
+                    const SizedBox(height: 30),
+                    
+                    // Register Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _register,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        child: Consumer<AuthProvider>(
+                          builder: (context, auth, child) {
+                            return auth.isLoading
+                                ? const CircularProgressIndicator(color: AppColors.white)
+                                : const Text(
+                                    'REGISTER',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.white),
+                                  );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
+                ),
               ),
             ),
           ],
@@ -325,14 +408,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, IconData icon, String hint) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required IconData icon,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+  }) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
         borderRadius: BorderRadius.circular(5),
       ),
-      child: TextField(
+      child: TextFormField(
         controller: controller,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        validator: validator,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: AppColors.textLight),
           hintText: hint,

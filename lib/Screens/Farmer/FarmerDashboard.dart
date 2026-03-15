@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../utils/app_colors.dart';
-import '../../utils/asset_manager.dart';
+import '../../utils/AppColors.dart';
+import '../../utils/AssetManager.dart';
 import '../Shared/CustomDrawer.dart';
 import 'SearchEquipmentScreen.dart';
 
@@ -13,7 +13,6 @@ class FarmerDashboard extends StatefulWidget {
 
 class _FarmerDashboardState extends State<FarmerDashboard> {
   String? _selectedCity;
-  final List<String> _cities = ['Lahore', 'Karachi', 'Islamabad', 'Multan', 'Faisalabad'];
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +67,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                       hint: const Text('Select City'),
                       isExpanded: true,
                       icon: const Icon(Icons.location_city, color: AppColors.primary),
-                      items: _cities.map((String city) {
+                      items: AssetManager.areas.map((String city) {
                         return DropdownMenuItem<String>(
                           value: city,
                           child: Text(city),

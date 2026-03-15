@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
+import '../../utils/AppColors.dart';
 import '../../Providers/AuthProvider.dart';
 import 'SignUpScreen.dart';
 import '../Farmer/FarmerDashboard.dart';
@@ -17,12 +17,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isFarmer = false; // true = Farmer, false = Owner (Recipient / Donor logic)
   bool _obscurePassword = true;
 
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   void _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
@@ -131,112 +131,126 @@ class _LoginScreenState extends State<LoginScreen> {
             // Form Fields
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Email Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.email, color: AppColors.textLight),
-                        hintText: 'Email',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 15),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Email Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Password Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: AppColors.textLight,
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      child: TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.email, color: AppColors.textLight),
+                          hintText: 'Email',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 15),
                         ),
-                        hintText: 'Password',
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  // Forgot Password
-                  const Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Consumer<AuthProvider>(
-                        builder: (context, auth, child) {
-                          return auth.isLoading
-                              ? const CircularProgressIndicator(color: AppColors.white)
-                              : const Text(
-                                  'Login',
-                                  style: TextStyle(fontSize: 18, color: AppColors.white),
-                                );
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Email is required';
+                          if (!value.contains('@') || !value.contains('.')) return 'Enter a valid email';
+                          return null;
                         },
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Create Account Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'New User? ',
-                        style: TextStyle(color: AppColors.textDark),
+                    const SizedBox(height: 20),
+                    // Password Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                          );
+                      child: TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.textLight,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          hintText: 'Password',
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) return 'Password is required';
+                          if (value.length < 6) return 'Password must be at least 6 characters';
+                          return null;
                         },
-                        child: const Text(
-                          'Create Account',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    // Forgot Password
+                    const Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
+                        child: Consumer<AuthProvider>(
+                          builder: (context, auth, child) {
+                            return auth.isLoading
+                                ? const CircularProgressIndicator(color: AppColors.white)
+                                : const Text(
+                                    'Login',
+                                    style: TextStyle(fontSize: 18, color: AppColors.white),
+                                  );
+                          },
+                        ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    ),
+                    const SizedBox(height: 30),
+                    // Create Account Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'New User? ',
+                          style: TextStyle(color: AppColors.textDark),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                            );
+                          },
+                          child: const Text(
+                            'Create Account',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           ],

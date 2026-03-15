@@ -56,6 +56,7 @@ class AuthProvider extends ChangeNotifier {
     required String fullName,
     required String role,
     required String city,
+    required String phone,
     BuildContext? context,
   }) async {
     try {
@@ -65,7 +66,8 @@ class AuthProvider extends ChangeNotifier {
         password: password, 
         fullName: fullName, 
         role: role, 
-        city: city
+        city: city,
+        phone: phone,
       );
     } catch (e) {
       if (context != null) {
@@ -79,5 +81,10 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await _authService.logout();
+  }
+
+  Future<Map<String, dynamic>?> getUserData() async {
+    if (_user == null) return null;
+    return await _authService.getUserData(_user!.uid);
   }
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
-import '../../utils/asset_manager.dart';
+import '../../utils/AppColors.dart';
+import '../../utils/AssetManager.dart';
 import '../../Providers/AuthProvider.dart';
 
 class AddEquipmentScreen extends StatefulWidget {
@@ -15,16 +15,18 @@ class AddEquipmentScreen extends StatefulWidget {
 
 class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   String? _selectedCategory;
+  String? _selectedType;
   String? _selectedEquipmentImageRef;
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _specsController = TextEditingController();
   bool _isLoading = false;
 
+
+
   void _saveEquipment() async {
-     if (_selectedCategory == null || _nameController.text.isEmpty || _selectedEquipmentImageRef == null) {
+     if (_selectedCategory == null || _selectedType == null || _selectedEquipmentImageRef == null || _priceController.text.isEmpty) {
        ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text('Please select category, image, and enter a name')),
+         const SnackBar(content: Text('Please select category, type, image, and enter price')),
        );
        return;
      }
@@ -45,7 +47,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
        await FirebaseFirestore.instance.collection('equipment').add({
          'ownerId': userId,
          'ownerName': ownerName,
-         'name': _nameController.text.trim(),
+         'name': '$_selectedCategory ($_selectedType)',
          'category': _selectedCategory,
          'city': city,
          'assetImageRef': _selectedEquipmentImageRef,
@@ -90,38 +92,17 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             ),
             const SizedBox(height: 20),
             
-            // Name Field
-            _buildTextField('Equipment Name (e.g. Massey Tractor)', _nameController),
-            const SizedBox(height: 15),
-            
-            // Price Field
-            _buildTextField('Rental Price per Day', _priceController, isNumber: true),
-            const SizedBox(height: 15),
-            
             // Category Dropdown
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
-                borderRadius: BorderRadius.circular(5),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedCategory,
-                  hint: const Text('Select Category'),
-                  isExpanded: true,
-                  items: AssetManager.categories.map((c) {
-                    return DropdownMenuItem(value: c, child: Text(c));
-                  }).toList(),
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedCategory = val;
-                      _selectedEquipmentImageRef = null; // reset image
-                    });
-                  },
-                ),
-              ),
+            _buildDropdown(
+              hint: 'Equipment Category',
+              value: _selectedCategory,
+              items: AssetManager.categories,
+              onChanged: (val) {
+                setState(() {
+                  _selectedCategory = val;
+                  _selectedEquipmentImageRef = null; // reset image
+                });
+              },
             ),
             
             // Dynamic Image Gallery for Owner Equipment
@@ -180,6 +161,23 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               Text('No images found in assets/images/$_selectedCategory', style: const TextStyle(color: Colors.red)),
             ],
             
+            const SizedBox(height: 15),
+
+            // Type Dropdown
+            _buildDropdown(
+              hint: 'Equipment Specs / Type',
+              value: _selectedType,
+              items: AssetManager.equipmentTypes,
+              onChanged: (val) {
+                setState(() {
+                  _selectedType = val;
+                });
+              },
+            ),
+            const SizedBox(height: 15),
+            
+            // Price Field
+            _buildTextField('Rental Price per Day', _priceController, isNumber: true),
             const SizedBox(height: 15),
             
             // Specs Field
@@ -241,6 +239,36 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
          ),
        ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Text(hint),
+          isExpanded: true,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
     );
   }
 }

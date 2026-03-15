@@ -1,27 +1,44 @@
 import 'package:flutter/material.dart';
-import '../../utils/app_colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../utils/AppColors.dart';
+import '../../utils/AssetManager.dart';
 
 class EquipmentDetailsScreen extends StatelessWidget {
-  final String ownerName;
-  final String category;
+  final Map<String, dynamic> equipmentData;
 
   const EquipmentDetailsScreen({
     Key? key,
-    required this.ownerName,
-    required this.category,
+    required this.equipmentData,
   }) : super(key: key);
 
   void _showRequestDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return const BookingRequestDialog();
+        return BookingRequestDialog(equipmentData: equipmentData);
       },
     );
   }
 
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final String ownerId = equipmentData['ownerId'];
+    final String ownerName = equipmentData['ownerName'] ?? 'Unknown Owner';
+    final String category = equipmentData['category'] ?? 'Equipment';
+    final String price = equipmentData['pricePerDay'] != null ? 'Rs ${equipmentData['pricePerDay']}/day' : 'Price TBA';
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -29,139 +46,173 @@ class EquipmentDetailsScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: AppColors.primary,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Top Banner with Avatar
-            Container(
-              width: double.infinity,
-              color: AppColors.primary,
-              padding: const EdgeInsets.only(bottom: 30, top: 20),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: AppColors.white,
-                    child: CircleAvatar(
-                      radius: 56,
-                      backgroundColor: AppColors.primaryLight,
-                      child: const Icon(Icons.person, size: 60, color: AppColors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    ownerName,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      category,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 30),
-            
-            // Contact Information Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Contact Information',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildInfoTile(Icons.email, 'Email', 'hidden@example.com'),
-                        const Divider(height: 1),
-                        _buildInfoTile(Icons.phone, 'Phone', '0300------- (Hidden)'),
-                        const Divider(height: 1),
-                        _buildInfoTile(Icons.location_city, 'City', 'Lahore'),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Request Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showRequestDialog(context),
-                      icon: const Icon(Icons.send, color: AppColors.white),
-                      label: const Text(
-                        'Send Booking Request',
-                        style: TextStyle(fontSize: 18, color: AppColors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance.collection('users').doc(ownerId).get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('Failed to load owner details.'));
+          }
+
+          final ownerDoc = snapshot.data!.data() as Map<String, dynamic>;
+          final email = ownerDoc['email'] ?? 'Not provided';
+          final phone = ownerDoc['phone'] ?? 'Not provided';
+          final city = equipmentData['city'] ?? ownerDoc['city'] ?? 'Unknown';
+
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // Top Banner with Avatar
+                Container(
+                  width: double.infinity,
+                  color: AppColors.primary,
+                  padding: const EdgeInsets.only(bottom: 30, top: 20),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: AppColors.white,
+                        child: CircleAvatar(
+                          radius: 56,
+                          backgroundColor: AppColors.primaryLight,
+                          child: const Icon(Icons.person, size: 60, color: AppColors.white),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 15),
+                      Text(
+                        ownerName,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '$category • $price',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+                ),
+                
+                const SizedBox(height: 30),
+                
+                // Contact Information Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Contact Information',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildInfoTile(Icons.email, 'Email', email),
+                            const Divider(height: 1),
+                            _buildInfoTile(
+                              Icons.phone, 
+                              'Phone', 
+                              phone,
+                              onTap: phone != 'Not provided' ? () => _makePhoneCall(phone) : null,
+                            ),
+                            const Divider(height: 1),
+                            _buildInfoTile(Icons.location_city, 'City', city),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Request Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showRequestDialog(context),
+                          icon: const Icon(Icons.send, color: AppColors.white),
+                          label: const Text(
+                            'Send Booking Request',
+                            style: TextStyle(fontSize: 18, color: AppColors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
+  Widget _buildInfoTile(IconData icon, String title, String value, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.primary),
         ),
-        child: Icon(icon, color: AppColors.primary),
-      ),
-      title: Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
-      subtitle: Text(
-        value,
-        style: const TextStyle(fontSize: 16, color: AppColors.textDark, fontWeight: FontWeight.bold),
+        title: Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
+        subtitle: Text(
+          value,
+          style: TextStyle(
+            fontSize: 16, 
+            color: onTap != null ? AppColors.primary : AppColors.textDark, 
+            fontWeight: FontWeight.bold,
+            decoration: onTap != null ? TextDecoration.underline : TextDecoration.none,
+          ),
+        ),
+        trailing: onTap != null ? const Icon(Icons.call, color: AppColors.primary) : null,
       ),
     );
   }
 }
 
-// Dialog Component embedded in this file for simplicity (matches reference popup)
+// Dialog Component embedded in this file for simplicity
 class BookingRequestDialog extends StatefulWidget {
-  const BookingRequestDialog({Key? key}) : super(key: key);
+  final Map<String, dynamic> equipmentData;
+  const BookingRequestDialog({Key? key, required this.equipmentData}) : super(key: key);
 
   @override
   State<BookingRequestDialog> createState() => _BookingRequestDialogState();
@@ -169,9 +220,182 @@ class BookingRequestDialog extends StatefulWidget {
 
 class _BookingRequestDialogState extends State<BookingRequestDialog> {
   String? _duration = '1 Day';
+  String? _selectedArea;
+  DateTime? _selectedDate;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  bool _isSubmitting = false;
+  List<DateTime> _bookedDates = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookedDates();
+  }
+
+  void _fetchBookedDates() async {
+    final equipmentId = widget.equipmentData['equipmentId'];
+    if (equipmentId == null) {
+      debugPrint('Warning: equipmentId is null in BookingRequestDialog!');
+      return;
+    }
+
+    try {
+      // Index-free query: only filter by equipmentId
+      final snapshot = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('equipmentId', isEqualTo: equipmentId)
+          .get();
+
+      final List<DateTime> dates = [];
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final String status = data['status'] ?? 'Pending';
+        
+        // Filter status in Dart to avoid needing a composite index in Firestore
+        if (status == 'Accepted' || status == 'Pending') {
+          final String? dateStr = data['bookingDate'];
+          if (dateStr != null) {
+            try {
+              final parts = dateStr.split('-');
+              if (parts.length == 3) {
+                final day = int.parse(parts[0]);
+                final month = int.parse(parts[1]);
+                final year = int.parse(parts[2]);
+                dates.add(DateTime(year, month, day));
+              }
+            } catch (e) {
+              debugPrint('Error parsing date: $e');
+            }
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _bookedDates = dates;
+          debugPrint('Fetched ${_bookedDates.length} booked/pending dates for equipment $equipmentId');
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching booked dates: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  bool _isDateBooked(DateTime date) {
+    return _bookedDates.any((bookedDate) =>
+        bookedDate.year == date.year &&
+        bookedDate.month == date.month &&
+        bookedDate.day == date.day);
+  }
+
+  void _presentDatePicker() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      selectableDayPredicate: (DateTime day) {
+        return !_isDateBooked(day);
+      },
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: AppColors.white,
+              onSurface: AppColors.textDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
+  }
+
+  void _submitRequest() async {
+    if (_nameController.text.isEmpty || _selectedArea == null || _selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill name, select area and date')));
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final String equipmentId = widget.equipmentData['equipmentId'] ?? 'unknown';
+      final String bookingDate = '${_selectedDate!.day}-${_selectedDate!.month}-${_selectedDate!.year}';
+
+      // FINAL VALIDATION: Check if someone else booked it while the dialog was open
+      final existingCheck = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('equipmentId', isEqualTo: equipmentId)
+          .where('bookingDate', isEqualTo: bookingDate)
+          .get();
+
+      bool alreadyBooked = existingCheck.docs.any((doc) {
+        final status = doc.data()['status'] ?? 'Pending';
+        return status == 'Accepted' || status == 'Pending';
+      });
+
+      if (alreadyBooked) {
+        setState(() => _isSubmitting = false);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Already Booked For That Day'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+
+      final String farmerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      
+      await FirebaseFirestore.instance.collection('bookings').add({
+        'farmerId': farmerId,
+        'ownerId': widget.equipmentData['ownerId'],
+        'equipmentId': equipmentId,
+        'equipment': widget.equipmentData['name'] ?? widget.equipmentData['category'],
+        'farmerName': _nameController.text.trim(),
+        'hospitalName': _selectedArea, // Reusing hospitalName as per plan/screenshot
+        'duration': _duration,
+        'bookingDate': bookingDate,
+        'message': _messageController.text.trim(),
+        'status': 'Pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+      Navigator.pop(context); // close dialog
+      Navigator.pop(context); // go back to search screen
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request Sent Successfully!')),
+      );
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String ownerName = widget.equipmentData['equipmentData']?['ownerName'] ?? widget.equipmentData['ownerName'] ?? 'Owner';
+    
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: AppColors.background,
@@ -190,11 +414,11 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                   topRight: Radius.circular(20),
                 ),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  Icon(Icons.agriculture, color: AppColors.white, size: 50),
-                  SizedBox(height: 10),
-                  Text(
+                  const Icon(Icons.agriculture, color: AppColors.white, size: 50),
+                  const SizedBox(height: 10),
+                  const Text(
                     'Request Equipment',
                     style: TextStyle(
                       color: AppColors.white,
@@ -203,8 +427,8 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                     ),
                   ),
                   Text(
-                    'To: Owner Name',
-                    style: TextStyle(color: AppColors.white),
+                    'To: $ownerName',
+                    style: const TextStyle(color: AppColors.white),
                   ),
                 ],
               ),
@@ -215,33 +439,54 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildTextField('Your Name'),
+                  _buildTextField(_nameController, 'Your Name'),
                   const SizedBox(height: 15),
-                  _buildTextField('Farm Location / Address'),
+                  
+                  // Area Dropdown
+                  _buildDropdown(
+                    hint: 'Select Farm Area',
+                    value: _selectedArea,
+                    items: AssetManager.areas,
+                    onChanged: (val) => setState(() => _selectedArea = val),
+                  ),
+                  
+                  const SizedBox(height: 15),
+
+                  // Date Picker Picker
+                  GestureDetector(
+                    onTap: _presentDatePicker,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            _selectedDate == null 
+                                ? 'Select Booking Date' 
+                                : '${_selectedDate!.day}-${_selectedDate!.month}-${_selectedDate!.year}',
+                            style: TextStyle(
+                              color: _selectedDate == null ? Colors.grey[600] : AppColors.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   const SizedBox(height: 15),
                   
                   // Duration Dropdown
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _duration,
-                            items: ['1 Hour', '1 Day', '1 Week', '1 Month']
-                                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                                .toList(),
-                            onChanged: (val) => setState(() => _duration = val),
-                          ),
-                        ),
-                      ],
-                    ),
+                  _buildDropdown(
+                    hint: 'Select Duration',
+                    value: _duration,
+                    items: AssetManager.bookingDurations,
+                    onChanged: (val) => setState(() => _duration = val),
                   ),
                   
                   const SizedBox(height: 15),
@@ -254,9 +499,10 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                       border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
                       borderRadius: BorderRadius.circular(5),
                     ),
-                    child: const TextField(
+                    child: TextField(
+                      controller: _messageController,
                       maxLines: 4,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Message (e.g. Needs driver too)',
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.all(10),
@@ -274,21 +520,17 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cancel', style: TextStyle(color: AppColors.error)),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Submit Logic
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Request Sent Successfully!')),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                        ),
-                        child: const Text('Send'),
-                      ),
+                      _isSubmitting
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                              onPressed: _submitRequest,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                              ),
+                              child: const Text('Send'),
+                            ),
                     ],
                   ),
                 ],
@@ -300,7 +542,7 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
     );
   }
 
-  Widget _buildTextField(String hint) {
+  Widget _buildTextField(TextEditingController controller, String hint) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -308,10 +550,41 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
         borderRadius: BorderRadius.circular(5),
       ),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           hintText: hint,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Text(hint),
+          isExpanded: true,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item),
+            );
+          }).toList(),
+          onChanged: onChanged,
         ),
       ),
     );

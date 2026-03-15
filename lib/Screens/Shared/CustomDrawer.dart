@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../utils/app_colors.dart';
+import '../../utils/AppColors.dart';
 import '../../Providers/AuthProvider.dart';
 import '../Auth/LoginScreen.dart';
 import '../Farmer/FarmerDashboard.dart';

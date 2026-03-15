@@ -9,6 +9,26 @@ class AssetManager {
     'Tractor', 'Harvester', 'Plough', 'Seeder', 'Water Pump', 'Sprayer', 'Loader'
   ];
 
+  // Hardcoded areas for the entire app
+  static const List<String> areas = [
+    'Lahore', 'Karachi', 'Islamabad', 'Multan', 'Faisalabad'
+  ];
+
+  // Global Equipment Types
+  static const List<String> equipmentTypes = [
+    'Diesel', 'Petrol', 'Electric', 'Manual'
+  ];
+
+  // Global Booking Durations
+  static const List<String> bookingDurations = [
+    '1 Hour', '1 Day', '1 Week', '1 Month'
+  ];
+
+  // Global Booking Statuses
+  static const List<String> bookingStatus = [
+    'Pending', 'Accepted', 'Rejected'
+  ];
+
   static final Map<String, List<String>> _categoryImages = {};
 
   // Dynamically load all available image paths from the manifest

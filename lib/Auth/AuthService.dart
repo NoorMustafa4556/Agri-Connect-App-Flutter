@@ -15,6 +15,7 @@ class AuthService {
     required String fullName,
     required String role, // 'Farmer' or 'Owner'
     required String city,
+    required String phone,
   }) async {
     try {
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -29,7 +30,7 @@ class AuthService {
         'email': email,
         'role': role,
         'city': city,
-        'phone': '', // Can be completed in Profile edit
+        'phone': phone,
         'createdAt': FieldValue.serverTimestamp(),
         'isOnline': false, // For Owners
       });

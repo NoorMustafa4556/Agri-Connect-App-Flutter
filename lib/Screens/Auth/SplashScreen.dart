@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../utils/app_colors.dart';
+import '../../utils/AppColors.dart';
 import 'LoginScreen.dart';
 import '../Farmer/FarmerDashboard.dart';
 import '../Owner/OwnerDashboard.dart';

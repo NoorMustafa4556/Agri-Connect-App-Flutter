@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../utils/app_colors.dart';
+import '../../utils/AppColors.dart';
+import '../../utils/AssetManager.dart';
 import 'EquipmentDetailsScreen.dart';
 
 class SearchEquipmentScreen extends StatefulWidget {
@@ -62,13 +63,26 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                     border: Border.all(color: AppColors.primary, width: 2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: TextField(
-                    controller: _cityController,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.location_city, color: AppColors.primary),
-                      hintText: 'e.g. Lahore',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: AssetManager.areas.contains(_currentCity) ? _currentCity : null,
+                      hint: const Text('Select Area'),
+                      isExpanded: true,
+                      icon: const Icon(Icons.location_city, color: AppColors.primary),
+                      items: AssetManager.areas.map((String city) {
+                        return DropdownMenuItem<String>(
+                          value: city,
+                          child: Text(city),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _currentCity = val;
+                          });
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -195,12 +209,12 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                                     Expanded(
                                       child: OutlinedButton(
                                         onPressed: () {
+                                          data['equipmentId'] = docs[index].id; // Add doc ID
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (_) => EquipmentDetailsScreen(
-                                                ownerName: ownerName,
-                                                category: widget.category,
+                                                equipmentData: data,
                                               ),
                                             ),
                                           );
@@ -220,7 +234,13 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                                     Expanded(
                                       child: ElevatedButton(
                                         onPressed: isPending ? null : () {
-                                          // Will open request popup later
+                                          data['equipmentId'] = docs[index].id;
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return BookingRequestDialog(equipmentData: data);
+                                            },
+                                          );
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: isPending ? Colors.grey[300] : AppColors.primary,

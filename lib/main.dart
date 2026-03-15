@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'utils/app_colors.dart';
-import 'utils/asset_manager.dart';
+import 'utils/AppColors.dart';
+import 'utils/AssetManager.dart';
 import 'Providers/AuthProvider.dart';
 import 'Screens/Auth/SplashScreen.dart';
 
