@@ -6,6 +6,7 @@ AgriConnect is a comprehensive Flutter-based platform designed to bridge the gap
 Empowering the agricultural community by providing a digital marketplace for farming equipment, ensuring efficiency, transparency, and ease of access to essential machinery.
 
 
+
 ---
 
 
