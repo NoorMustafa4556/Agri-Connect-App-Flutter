@@ -33,6 +33,11 @@ Empowering the agricultural community by providing a digital marketplace for far
 
 ---
 
+## Why AgriConnect?
+For many small to medium-scale farmers, purchasing heavy farm machinery is financially out of reach. AgriConnect solves this by creating a localized sharing economy. Equipment owners can monetize their idle machinery, and farmers can rent what they need, exactly when they need it. It's a win-win for the agricultural ecosystem!
+
+---
+
 ## 📸 App Gallery (Screenshots)
 
 *Note: The following gallery contains sequential screenshots documenting the complete A-Z app flow.*
