@@ -80,9 +80,9 @@ For many small to medium-scale farmers, purchasing heavy farm machinery is finan
   <img src="assets/images/23.png" width="24%" />
   <img src="assets/images/24.png" width="24%" />
 </p>
-<p align="center">
+<!-- <p align="center">
   <img src="assets/images/25.png" width="24%" />
-</p>
+</p> -->
 
 ---
 
