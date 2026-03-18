@@ -81,9 +81,34 @@ For many small to medium-scale farmers, purchasing heavy farm machinery is finan
   <img src="assets/images/23.png" width="24%" />
   <img src="assets/images/24.png" width="24%" />
 </p>
-<!-- <p align="center">
+<p align="center">
   <img src="assets/images/25.png" width="24%" />
-</p> -->
+  <img src="assets/images/26.png" width="24%" />
+  <img src="assets/images/27.png" width="24%" />
+  <img src="assets/images/28.png" width="24%" />
+</p>
+<p align="center">
+  <img src="assets/images/29.png" width="24%" />
+  <img src="assets/images/30.png" width="24%" />
+  <img src="assets/images/31.png" width="24%" />
+  <img src="assets/images/32.png" width="24%" />
+</p>
+<p align="center">
+  <img src="assets/images/33.png" width="24%" />
+  <img src="assets/images/34.png" width="24%" />
+  <img src="assets/images/35.png" width="24%" />
+  <img src="assets/images/36.png" width="24%" />
+</p>
+<p align="center">
+  <img src="assets/images/37.png" width="24%" />
+  <img src="assets/images/38.png" width="24%" />
+  <img src="assets/images/39.png" width="24%" />
+  <img src="assets/images/40.png" width="24%" />
+</p>
+<p align="center">
+  <img src="assets/images/41.png" width="24%" />
+  <img src="assets/images/42.png" width="24%" />
+</p>
 
 ---
 
