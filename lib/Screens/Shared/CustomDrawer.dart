@@ -42,8 +42,8 @@ class CustomDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.home, color: AppColors.textDark),
-            title: const Text('Home'),
+            leading: Icon(Icons.home, color: AppColors.getTextColor(context)),
+            title: Text('Home', style: TextStyle(color: AppColors.getTextColor(context))),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacement(
@@ -55,16 +55,16 @@ class CustomDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.person_outline, color: AppColors.textDark),
-            title: const Text('My Profile'),
+            leading: Icon(Icons.person_outline, color: AppColors.getTextColor(context)),
+            title: Text('My Profile', style: TextStyle(color: AppColors.getTextColor(context))),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
             },
           ),
           ListTile(
-            leading: const Icon(Icons.history, color: AppColors.textDark),
-            title: const Text('Request History'),
+            leading: Icon(Icons.history, color: AppColors.getTextColor(context)),
+            title: Text('Request History', style: TextStyle(color: AppColors.getTextColor(context))),
             onTap: () {
                Navigator.pop(context);
                Navigator.push(
@@ -76,8 +76,8 @@ class CustomDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.lock_outline, color: AppColors.textDark),
-            title: const Text('Change Password'),
+            leading: Icon(Icons.lock_outline, color: AppColors.getTextColor(context)),
+            title: Text('Change Password', style: TextStyle(color: AppColors.getTextColor(context))),
             onTap: () {
                Navigator.pop(context);
                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
@@ -89,9 +89,9 @@ class CustomDrawer extends StatelessWidget {
               return ListTile(
                 leading: Icon(
                   theme.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                  color: AppColors.textDark,
+                  color: AppColors.getTextColor(context),
                 ),
-                title: const Text('Dark Mode'),
+                title: Text('Dark Mode', style: TextStyle(color: AppColors.getTextColor(context))),
                 trailing: Switch(
                   value: theme.isDarkMode,
                   onChanged: (val) => theme.toggleTheme(),

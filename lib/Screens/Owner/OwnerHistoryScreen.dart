@@ -98,26 +98,26 @@ class _OwnerRequestsView extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 15),
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: (statusFilter == 'Accepted' ? AppColors.success : AppColors.error).withOpacity(0.05),
+                color: (statusFilter == 'Accepted' ? AppColors.success : AppColors.error).withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.05),
                 borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: (statusFilter == 'Accepted' ? AppColors.success : AppColors.error).withOpacity(0.2)),
+                border: Border.all(color: (statusFilter == 'Accepted' ? AppColors.success : AppColors.error).withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(equipment, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(equipment, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.getTextColor(context))),
                       Text(statusFilter, style: TextStyle(color: statusFilter == 'Accepted' ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const Divider(height: 20),
-                  Text('Farmer: $farmerName'),
+                  Text('Farmer: $farmerName', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Booking Date: $bookingDate'),
+                  Text('Booking Date: $bookingDate', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Duration: $duration'),
+                  Text('Duration: $duration', style: TextStyle(color: AppColors.getTextColor(context))),
                 ],
               ),
             );

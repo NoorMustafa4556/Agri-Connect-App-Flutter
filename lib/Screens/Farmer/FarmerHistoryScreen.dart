@@ -151,9 +151,9 @@ class _RequestsView extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 15),
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
-             color: statusColor.withOpacity(0.05),
+             color: statusColor.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.05),
              borderRadius: BorderRadius.circular(15),
-             border: Border.all(color: statusColor.withOpacity(0.3)),
+             border: Border.all(color: statusColor.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.3)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,14 +167,15 @@ class _RequestsView extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(child: Text('Requested $equipment', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-                        Text(_formatDate(createdAt), style: const TextStyle(color: AppColors.textLight, fontSize: 12)),
+                        Expanded(child: Text('Requested $equipment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.getTextColor(context)))),
+                        Text(_formatDate(createdAt), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight, fontSize: 12)),
                       ],
                     ),
                     const SizedBox(height: 5),
-                    Text('Location: ${req['hospitalName'] ?? 'Unknown'}', style: const TextStyle(color: AppColors.textLight)),
                     const SizedBox(height: 5),
-                    Text('Duration: $duration', style: const TextStyle(color: AppColors.textLight)),
+                    Text('Location: ${req['hospitalName'] ?? 'Unknown'}', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
+                    const SizedBox(height: 5),
+                    Text('Duration: $duration', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
                     const SizedBox(height: 10),
                     Text('Status: $status', style: TextStyle(color: statusColor, fontWeight: FontWeight.bold)),
                     if (status == 'Accepted') ...[
@@ -225,14 +226,15 @@ class _RequestsView extends StatelessWidget {
           final name = data['fullName'] ?? 'Owner';
 
           return AlertDialog(
-            title: Text('Contact $name'),
+            backgroundColor: AppColors.getCardColor(context),
+            title: Text('Contact $name', style: TextStyle(color: AppColors.getTextColor(context))),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
                   leading: const Icon(Icons.phone, color: AppColors.primary),
-                  title: const Text('Phone'),
-                  subtitle: Text(phone),
+                  title: Text('Phone', style: TextStyle(color: AppColors.getTextColor(context))),
+                  subtitle: Text(phone, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
                   onTap: () async {
                      final Uri url = Uri.parse('tel:$phone');
                      if (await canLaunchUrl(url)) await launchUrl(url);
@@ -240,8 +242,8 @@ class _RequestsView extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.email, color: AppColors.primary),
-                  title: const Text('Email'),
-                  subtitle: Text(email),
+                  title: Text('Email', style: TextStyle(color: AppColors.getTextColor(context))),
+                  subtitle: Text(email, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
                   onTap: () async {
                      final Uri url = Uri.parse('mailto:$email');
                      if (await canLaunchUrl(url)) await launchUrl(url);

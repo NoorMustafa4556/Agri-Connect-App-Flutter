@@ -96,6 +96,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             _buildDropdown(
               hint: 'Equipment Category',
               value: _selectedCategory,
+              context: context,
               items: AssetManager.categories,
               onChanged: (val) {
                 setState(() {
@@ -108,9 +109,9 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             // Dynamic Image Gallery for Owner Equipment
             if (_selectedCategory != null && AssetManager.getImagesForCategory(_selectedCategory!).isNotEmpty) ...[
               const SizedBox(height: 15),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.getTextColor(context))),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -167,6 +168,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             _buildDropdown(
               hint: 'Equipment Specs / Type',
               value: _selectedType,
+              context: context,
               items: AssetManager.equipmentTypes,
               onChanged: (val) {
                 setState(() {
@@ -177,7 +179,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             const SizedBox(height: 15),
             
             // Price Field
-            _buildTextField('Rental Price per Day', _priceController, isNumber: true),
+            _buildTextField('Rental Price per Day', _priceController, context, isNumber: true),
             const SizedBox(height: 15),
             
             // Specs Field
@@ -191,11 +193,13 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               child: TextField(
                 controller: _specsController,
                 maxLines: 4,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Additional Details (Engine power, capacity etc.)',
+                  hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(10),
+                  contentPadding: const EdgeInsets.all(10),
                 ),
+                style: TextStyle(color: AppColors.getTextColor(context)),
               ),
             ),
             
@@ -223,18 +227,20 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     );
   }
 
-  Widget _buildTextField(String hint, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildTextField(String hint, TextEditingController controller, BuildContext context, {bool isNumber = false}) {
     return Container(
        decoration: BoxDecoration(
-         color: AppColors.white,
+         color: AppColors.getCardColor(context),
          border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
          borderRadius: BorderRadius.circular(5),
        ),
        child: TextField(
          controller: controller,
          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+         style: TextStyle(color: AppColors.getTextColor(context)),
          decoration: InputDecoration(
            hintText: hint,
+           hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
            border: InputBorder.none,
            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
          ),
@@ -245,12 +251,13 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   Widget _buildDropdown({
     required String hint,
     required String? value,
+    required BuildContext context,
     required List<String> items,
     required Function(String?) onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.getCardColor(context),
         border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
         borderRadius: BorderRadius.circular(5),
       ),
@@ -258,12 +265,13 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          hint: Text(hint),
+          hint: Text(hint, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
           isExpanded: true,
+          dropdownColor: AppColors.getCardColor(context),
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item),
+              child: Text(item, style: TextStyle(color: AppColors.getTextColor(context))),
             );
           }).toList(),
           onChanged: onChanged,
