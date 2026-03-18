@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../../utils/AppColors.dart';
 import '../../utils/AssetManager.dart';
@@ -14,7 +16,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('My Profile'),
         backgroundColor: AppColors.primary,
@@ -28,19 +30,19 @@ class ProfileScreen extends StatelessWidget {
       ),
       body: Consumer<AuthProvider>(
         builder: (context, auth, child) {
-          if (auth.user == null) {
-            return const Center(child: Text("Please login to view profile."));
-          }
-
-          final String name = auth.userName ?? 'User';
-          final String email = auth.user?.email ?? 'Unknown Email';
-          
-          return FutureBuilder<Map<String, dynamic>?>(
-            future: auth.getUserData(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+              if (auth.user == null) {
+                return const Center(child: Text("Please login to view profile."));
               }
+
+              final String name = auth.userName ?? 'User';
+              final String email = auth.user!.email ?? 'Unknown Email';
+              
+              return FutureBuilder<Map<String, dynamic>?>(
+                future: auth.getUserData(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
               final userData = snapshot.data ?? {};
               final String phone = userData['phone'] ?? 'Not provided';
@@ -88,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
@@ -100,11 +102,11 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            _buildInfoTile(Icons.phone, 'Phone', phone),
+                            _buildInfoTile(context, Icons.phone, 'Phone', phone),
                             const Divider(height: 1),
-                            _buildInfoTile(Icons.location_city, 'City', city),
+                            _buildInfoTile(context, Icons.location_city, 'City', city),
                             const Divider(height: 1),
-                            _buildInfoTile(Icons.agriculture, 'Account Role', role),
+                            _buildInfoTile(context, Icons.agriculture, 'Account Role', role),
                           ],
                         ),
                       ),
@@ -119,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value) {
+  Widget _buildInfoTile(BuildContext context, IconData icon, String title, String value) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -129,10 +131,10 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.primary),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
+      title: Text(title, style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
       subtitle: Text(
         value,
-        style: const TextStyle(fontSize: 16, color: AppColors.textDark, fontWeight: FontWeight.bold),
+        style: TextStyle(fontSize: 16, color: AppColors.getTextColor(context), fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -146,12 +148,66 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  String? _selectedCity = 'Lahore';
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  String? _selectedCity;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  void _loadInitialData() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final userData = await auth.getUserData();
+    if (userData != null) {
+      _nameController.text = userData['fullName'] ?? '';
+      _phoneController.text = userData['phone'] ?? '';
+      _selectedCity = userData['city'];
+    }
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _saveProfile() async {
+    final String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    
+    if (uid.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'fullName': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'city': _selectedCity,
+      });
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated Successfully')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating profile: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('Edit Profile')),
       body: SingleChildScrollView(
          padding: const EdgeInsets.all(20),
@@ -173,23 +229,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-              _buildTextField('Full Name', 'Ali Raza'),
+              _buildTextField('Full Name', 'Enter your name', _nameController),
               const SizedBox(height: 15),
-              _buildTextField('Email', 'aliraza@gmail.com'),
-              const SizedBox(height: 15),
-              _buildTextField('Phone Number', '03001234568'),
+              _buildTextField('Phone Number', 'Enter your phone', _phoneController),
               const SizedBox(height: 15),
               
               // City Dropdown
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('City', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                  const Text('City', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.white,
-                      border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                      color: Theme.of(context).cardColor,
+                      border: Border.all(color: Colors.grey.withOpacity(0.5)),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -198,10 +252,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         value: AssetManager.areas.contains(_selectedCity) ? _selectedCity : null,
                         hint: const Text('Select City'),
                         isExpanded: true,
+                        dropdownColor: AppColors.getCardColor(context),
                         items: AssetManager.areas.map((String city) {
                           return DropdownMenuItem<String>(
                             value: city,
-                            child: Text(city),
+                            child: Text(city, style: TextStyle(color: AppColors.getTextColor(context))),
                           );
                         }).toList(),
                         onChanged: (val) => setState(() => _selectedCity = val),
@@ -216,16 +271,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                     Navigator.pop(context); // back to profile
-                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated')));
-                  },
+                  onPressed: _isLoading ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text('Save Changes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: AppColors.white)
+                    : const Text('Save Changes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
            ],
@@ -234,21 +288,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String hint) {
+  Widget _buildTextField(String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.getTextColor(context))),
         const SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.white,
-            border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+            color: Theme.of(context).cardColor,
+            border: Border.all(color: Colors.grey.withOpacity(0.5)),
             borderRadius: BorderRadius.circular(5),
           ),
           child: TextField(
+            controller: controller,
+            style: TextStyle(color: AppColors.getTextColor(context)),
             decoration: InputDecoration(
               hintText: hint,
+              hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
             ),

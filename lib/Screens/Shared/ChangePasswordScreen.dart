@@ -7,7 +7,7 @@ class ChangePasswordScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Change Password'),
         backgroundColor: AppColors.primary,
@@ -17,11 +17,11 @@ class ChangePasswordScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-             _buildPasswordField('Old Password'),
+             _buildPasswordField(context, 'Old Password'),
              const SizedBox(height: 15),
-             _buildPasswordField('New Password'),
+             _buildPasswordField(context, 'New Password'),
              const SizedBox(height: 15),
-             _buildPasswordField('Confirm New Password'),
+             _buildPasswordField(context, 'Confirm New Password'),
              const SizedBox(height: 30),
              SizedBox(
                width: double.infinity,
@@ -45,10 +45,10 @@ class ChangePasswordScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPasswordField(String hint) {
+  Widget _buildPasswordField(BuildContext context, String hint) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
         borderRadius: BorderRadius.circular(5),
       ),

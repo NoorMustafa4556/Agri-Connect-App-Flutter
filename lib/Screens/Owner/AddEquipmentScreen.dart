@@ -77,7 +77,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Add Equipment'),
       ),
@@ -184,7 +184,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
             Container(
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                      color: Theme.of(context).cardColor,
                 border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
                 borderRadius: BorderRadius.circular(5),
               ),

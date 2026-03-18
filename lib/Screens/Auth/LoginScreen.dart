@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -62,14 +62,14 @@ class _LoginScreenState extends State<LoginScreen> {
               color: AppColors.primary,
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Welcome Back,',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.getTextColor(context)),
             ),
             const SizedBox(height: 5),
-            const Text(
+            Text(
               'Sign in to continue',
-              style: TextStyle(fontSize: 16, color: AppColors.textLight),
+              style: TextStyle(fontSize: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
             ),
             const SizedBox(height: 30),
 
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.getCardColor(context),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Farmer',
                             style: TextStyle(
-                              color: isFarmer ? AppColors.white : AppColors.textDark,
+                              color: isFarmer ? AppColors.white : AppColors.getTextColor(context),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -115,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Equipment Owner',
                             style: TextStyle(
-                              color: !isFarmer ? AppColors.white : AppColors.textDark,
+                              color: !isFarmer ? AppColors.white : AppColors.getTextColor(context),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -139,17 +139,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Email Field
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: AppColors.getCardColor(context),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.email, color: AppColors.textLight),
+                        style: TextStyle(color: AppColors.getTextColor(context)),
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.email, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           hintText: 'Email',
+                          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 15),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 15),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) return 'Email is required';
@@ -162,22 +164,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Password Field
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: AppColors.getCardColor(context),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        style: TextStyle(color: AppColors.getTextColor(context)),
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
+                          prefixIcon: Icon(Icons.lock, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: AppColors.textLight,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight,
                             ),
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           hintText: 'Password',
+                          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(vertical: 15),
                         ),
@@ -227,9 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'New User? ',
-                          style: TextStyle(color: AppColors.textDark),
+                          style: TextStyle(color: AppColors.getTextColor(context)),
                         ),
                         GestureDetector(
                           onTap: () {

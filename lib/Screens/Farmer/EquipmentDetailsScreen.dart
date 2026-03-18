@@ -40,7 +40,7 @@ class EquipmentDetailsScreen extends StatelessWidget {
     final String price = equipmentData['pricePerDay'] != null ? 'Rs ${equipmentData['pricePerDay']}/day' : 'Price TBA';
     
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Owner Details'),
         elevation: 0,
@@ -94,13 +94,13 @@ class EquipmentDetailsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.white.withOpacity(0.1) : AppColors.white,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '$category • $price',
-                          style: const TextStyle(
-                            color: AppColors.primary,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.white : AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -128,21 +128,22 @@ class EquipmentDetailsScreen extends StatelessWidget {
                       const SizedBox(height: 15),
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Column(
                           children: [
-                            _buildInfoTile(Icons.email, 'Email', email),
+                            _buildInfoTile(context, Icons.email, 'Email', email),
                             const Divider(height: 1),
                             _buildInfoTile(
+                              context,
                               Icons.phone, 
                               'Phone', 
                               phone,
                               onTap: phone != 'Not provided' ? () => _makePhoneCall(phone) : null,
                             ),
                             const Divider(height: 1),
-                            _buildInfoTile(Icons.location_city, 'City', city),
+                            _buildInfoTile(context, Icons.location_city, 'City', city),
                           ],
                         ),
                       ),
@@ -180,7 +181,7 @@ class EquipmentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value, {VoidCallback? onTap}) {
+  Widget _buildInfoTile(BuildContext context, IconData icon, String title, String value, {VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(15),
@@ -193,12 +194,12 @@ class EquipmentDetailsScreen extends StatelessWidget {
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
-        title: Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textLight)),
+        title: Text(title, style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
         subtitle: Text(
           value,
           style: TextStyle(
             fontSize: 16, 
-            color: onTap != null ? AppColors.primary : AppColors.textDark, 
+            color: onTap != null ? AppColors.primary : AppColors.getTextColor(context), 
             fontWeight: FontWeight.bold,
             decoration: onTap != null ? TextDecoration.underline : TextDecoration.none,
           ),
@@ -398,7 +399,7 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
     
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -458,8 +459,8 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
-                        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                        color: AppColors.getCardColor(context),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.5)),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Row(
@@ -471,7 +472,7 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                                 ? 'Select Booking Date' 
                                 : '${_selectedDate!.day}-${_selectedDate!.month}-${_selectedDate!.year}',
                             style: TextStyle(
-                              color: _selectedDate == null ? Colors.grey[600] : AppColors.textDark,
+                              color: _selectedDate == null ? Colors.grey[600] : AppColors.getTextColor(context),
                             ),
                           ),
                         ],
@@ -495,17 +496,18 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
                   Container(
                     height: 100,
                     decoration: BoxDecoration(
-                      color: AppColors.white,
-                      border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                      color: AppColors.getCardColor(context),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: TextField(
                       controller: _messageController,
                       maxLines: 4,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Message (e.g. Needs driver too)',
+                        hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(10),
+                        contentPadding: const EdgeInsets.all(10),
                       ),
                     ),
                   ),
@@ -545,14 +547,15 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
   Widget _buildTextField(TextEditingController controller, String hint) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        color: AppColors.getCardColor(context),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(5),
       ),
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
         ),
@@ -568,8 +571,8 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        color: AppColors.getCardColor(context),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -581,7 +584,7 @@ class _BookingRequestDialogState extends State<BookingRequestDialog> {
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item),
+              child: Text(item, style: TextStyle(color: AppColors.getTextColor(context))),
             );
           }).toList(),
           onChanged: onChanged,

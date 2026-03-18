@@ -39,7 +39,7 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('${widget.initialCity} - ${widget.category}s'),
       ),
@@ -59,7 +59,7 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: AppColors.getCardColor(context),
                     border: Border.all(color: AppColors.primary, width: 2),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -69,11 +69,12 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                       value: AssetManager.areas.contains(_currentCity) ? _currentCity : null,
                       hint: const Text('Select Area'),
                       isExpanded: true,
+                      dropdownColor: AppColors.getCardColor(context),
                       icon: const Icon(Icons.location_city, color: AppColors.primary),
                       items: AssetManager.areas.map((String city) {
                         return DropdownMenuItem<String>(
                           value: city,
-                          child: Text(city),
+                          child: Text(city, style: TextStyle(color: AppColors.getTextColor(context))),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -139,11 +140,13 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                       margin: const EdgeInsets.only(bottom: 15),
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: AppColors.getCardColor(context),
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.black.withOpacity(0.3) 
+                                : Colors.black.withOpacity(0.05),
                             blurRadius: 5,
                             offset: const Offset(0, 5),
                           )
@@ -156,7 +159,7 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                             width: 70,
                             height: 70,
                             decoration: BoxDecoration(
-                              color: AppColors.background,
+                              color: Theme.of(context).dividerColor,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: ClipRRect(
@@ -176,11 +179,11 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                               children: [
                                 Text(
                                   name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textDark,
-                                  ),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.getTextColor(context),
+                                    ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -196,10 +199,10 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   '$location • ${data['pricePerDay'] != null ? 'Rs ${data['pricePerDay']}/day' : 'Price TBA'}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textLight,
-                                  ),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight,
+                                    ),
                                 ),
                                 const SizedBox(height: 10),
                                 

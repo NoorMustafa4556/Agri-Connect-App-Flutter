@@ -8,6 +8,8 @@ import '../Owner/OwnerDashboard.dart';
 import 'ProfileScreen.dart';
 import 'ChangePasswordScreen.dart';
 import '../Farmer/FarmerHistoryScreen.dart';
+import '../Owner/OwnerHistoryScreen.dart';
+import '../../Providers/ThemeProvider.dart';
 
 class CustomDrawer extends StatelessWidget {
   final bool isFarmer;
@@ -65,7 +67,12 @@ class CustomDrawer extends StatelessWidget {
             title: const Text('Request History'),
             onTap: () {
                Navigator.pop(context);
-               Navigator.push(context, MaterialPageRoute(builder: (_) => const FarmerHistoryScreen()));
+               Navigator.push(
+                 context, 
+                 MaterialPageRoute(
+                   builder: (_) => isFarmer ? const FarmerHistoryScreen() : const OwnerHistoryScreen()
+                 )
+               );
             },
           ),
           ListTile(
@@ -74,6 +81,23 @@ class CustomDrawer extends StatelessWidget {
             onTap: () {
                Navigator.pop(context);
                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen()));
+            },
+          ),
+          const Divider(),
+          Consumer<ThemeProvider>(
+            builder: (context, theme, child) {
+              return ListTile(
+                leading: Icon(
+                  theme.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                  color: AppColors.textDark,
+                ),
+                title: const Text('Dark Mode'),
+                trailing: Switch(
+                  value: theme.isDarkMode,
+                  onChanged: (val) => theme.toggleTheme(),
+                  activeColor: AppColors.primary,
+                ),
+              );
             },
           ),
           const Divider(),

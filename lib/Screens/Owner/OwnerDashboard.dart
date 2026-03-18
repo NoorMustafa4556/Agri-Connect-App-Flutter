@@ -91,7 +91,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Owner Dashboard'),
           actions: [
@@ -121,7 +121,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).cardColor,
                 border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
               ),
               child: Row(
@@ -137,7 +137,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                       Text(
                         isOnline ? 'You are Online' : 'You are Offline',
                         style: TextStyle(
-                          color: isOnline ? AppColors.success : AppColors.error,
+                          color: isOnline ? AppColors.success : (Theme.of(context).brightness == Brightness.dark ? Colors.redAccent : AppColors.error),
                         ),
                       ),
                     ],
@@ -231,7 +231,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
               margin: const EdgeInsets.only(bottom: 15),
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [
                   BoxShadow(
@@ -259,15 +259,15 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     ],
                   ),
                   const Divider(height: 20),
-                  Text('Farmer: ${req['farmerName'] ?? 'Unknown'}'),
+                  Text('Farmer: ${req['farmerName'] ?? 'Unknown'}', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Location: ${req['hospitalName'] ?? 'Unknown'}'),
+                  Text('Location: ${req['hospitalName'] ?? 'Unknown'}', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Date: ${req['bookingDate'] ?? 'N/A'}'),
+                  Text('Date: ${req['bookingDate'] ?? 'N/A'}', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Duration: ${req['duration'] ?? 'N/A'}'),
+                  Text('Duration: ${req['duration'] ?? 'N/A'}', style: TextStyle(color: AppColors.getTextColor(context))),
                   const SizedBox(height: 5),
-                  Text('Message: "${req['message'] ?? 'None'}"', style: const TextStyle(fontStyle: FontStyle.italic)),
+                  Text('Message: "${req['message'] ?? 'None'}"', style: TextStyle(fontStyle: FontStyle.italic, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
                   const SizedBox(height: 15),
                   if (isPending) ...[
                     Row(
@@ -336,15 +336,15 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   _debugDetail('Full Name', name),
-                   _debugDetail('Phone', phone),
-                   _debugDetail('Email', email),
-                   _debugDetail('City', city),
-                   _debugDetail('Gender', gender),
+                   _debugDetail(context, 'Full Name', name),
+                   _debugDetail(context, 'Phone', phone),
+                   _debugDetail(context, 'Email', email),
+                   _debugDetail(context, 'City', city),
+                   _debugDetail(context, 'Gender', gender),
                    const Divider(),
-                   _debugDetail('Request Date', req['bookingDate'] ?? 'N/A'),
-                   _debugDetail('Duration', req['duration'] ?? 'N/A'),
-                   _debugDetail('Message', req['message'] ?? 'None'),
+                   _debugDetail(context, 'Request Date', req['bookingDate'] ?? 'N/A'),
+                   _debugDetail(context, 'Duration', req['duration'] ?? 'N/A'),
+                   _debugDetail(context, 'Message', req['message'] ?? 'None'),
                    const SizedBox(height: 20),
                    Row(
                      children: [
@@ -380,12 +380,12 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
     );
   }
 
-  Widget _debugDetail(String label, String value) {
+  Widget _debugDetail(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: RichText(
         text: TextSpan(
-          style: const TextStyle(color: AppColors.textDark, fontSize: 14),
+          style: TextStyle(color: AppColors.getTextColor(context), fontSize: 14),
           children: [
             TextSpan(text: '$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
             TextSpan(text: value),
@@ -418,7 +418,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
             margin: const EdgeInsets.only(bottom: 15),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
@@ -434,7 +434,7 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: Theme.of(context).dividerColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: ClipRRect(

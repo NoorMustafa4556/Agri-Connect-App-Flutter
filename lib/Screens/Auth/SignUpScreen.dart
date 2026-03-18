@@ -106,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
@@ -126,8 +126,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: AppColors.background,
-                  child: const Icon(Icons.camera_alt, size: 40, color: AppColors.textLight),
+                  backgroundColor: AppColors.getCardColor(context),
+                  child: Icon(Icons.camera_alt, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                 ),
                 Container(
                   padding: const EdgeInsets.all(4),
@@ -147,7 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Container(
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.getCardColor(context),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -164,7 +164,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Text(
                             'Farmer',
                             style: TextStyle(
-                              color: isFarmer ? AppColors.white : AppColors.textDark,
+                              color: isFarmer ? AppColors.white : AppColors.getTextColor(context),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -183,7 +183,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           child: Text(
                             'Equipment Owner',
                             style: TextStyle(
-                              color: !isFarmer ? AppColors.white : AppColors.textDark,
+                              color: !isFarmer ? AppColors.white : AppColors.getTextColor(context),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -207,6 +207,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller: _nameController, 
                       icon: Icons.person, 
                       hint: 'Full Name',
+                      context: context,
                       validator: (value) => (value == null || value.trim().isEmpty) ? 'Full Name is required' : null,
                     ),
                     const SizedBox(height: 15),
@@ -214,6 +215,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller: _emailController, 
                       icon: Icons.email, 
                       hint: 'Email',
+                      context: context,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) return 'Email is required';
@@ -226,6 +228,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller: _phoneController, 
                       icon: Icons.phone, 
                       hint: 'Phone Number (11 digits)', 
+                      context: context,
                       keyboardType: TextInputType.phone,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)],
                       validator: (value) {
@@ -241,6 +244,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       icon: Icons.location_on,
                       hint: 'Select Area',
                       value: _selectedArea,
+                      context: context,
                       items: AssetManager.areas,
                       onChanged: (val) => setState(() => _selectedArea = val),
                     ),
@@ -252,6 +256,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         icon: Icons.agriculture,
                         hint: 'Equipment Category',
                         value: _selectedEquipmentName,
+                        context: context,
                         items: AssetManager.categories,
                         onChanged: (val) {
                           setState(() {
@@ -265,6 +270,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         icon: Icons.settings,
                         hint: 'Equipment Specs / Type',
                         value: _selectedEquipmentType,
+                        context: context,
                         items: AssetManager.equipmentTypes,
                         onChanged: (val) => setState(() => _selectedEquipmentType = val),
                       ),
@@ -273,6 +279,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         controller: _rentController, 
                         icon: Icons.monetization_on, 
                         hint: 'Rent per Day (Rs)', 
+                        context: context,
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         validator: (value) {
@@ -285,9 +292,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // Dynamic Image Gallery for Owner Equipment
                       if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isNotEmpty) ...[
                         const SizedBox(height: 15),
-                        const Align(
+                        Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                          child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.getTextColor(context))),
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
@@ -344,22 +351,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Password Field
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+                        color: AppColors.getCardColor(context),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: TextFormField(
                         controller: _passwordController,
+                        style: TextStyle(color: AppColors.getTextColor(context)),
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock, color: AppColors.textLight),
+                          prefixIcon: Icon(Icons.lock, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: AppColors.textLight,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight,
                             ),
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           hintText: 'Password',
+                          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(vertical: 15),
                         ),
@@ -412,13 +421,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required TextEditingController controller,
     required IconData icon,
     required String hint,
+    required BuildContext context,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(5),
       ),
       child: TextFormField(
@@ -426,9 +436,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         validator: validator,
+        style: TextStyle(color: AppColors.getTextColor(context)),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: AppColors.textLight),
+          prefixIcon: Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
           hintText: hint,
+          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
@@ -440,30 +452,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required IconData icon,
     required String hint,
     required String? value,
+    required BuildContext context,
     required List<String> items,
     required Function(String?) onChanged,
   }) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.textLight.withOpacity(0.5)),
+        color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Row(
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Icon(icon, color: AppColors.textLight),
+            child: Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
           ),
           Expanded(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: value,
-                hint: Text(hint),
+                hint: Text(hint, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
                 isExpanded: true,
+                dropdownColor: AppColors.getCardColor(context),
                 items: items.map((String item) {
                   return DropdownMenuItem<String>(
                     value: item,
-                    child: Text(item),
+                    child: Text(item, style: TextStyle(color: AppColors.getTextColor(context))),
                   );
                 }).toList(),
                 onChanged: onChanged,

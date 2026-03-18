@@ -17,7 +17,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Find Equipment'),
         centerTitle: false,
@@ -58,7 +58,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: AppColors.getCardColor(context),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -66,11 +66,12 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                       value: _selectedCity,
                       hint: const Text('Select City'),
                       isExpanded: true,
+                      dropdownColor: AppColors.getCardColor(context),
                       icon: const Icon(Icons.location_city, color: AppColors.primary),
                       items: AssetManager.areas.map((String city) {
                         return DropdownMenuItem<String>(
                           value: city,
-                          child: Text(city),
+                          child: Text(city, style: TextStyle(color: AppColors.getTextColor(context))),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -121,11 +122,13 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: AppColors.getCardColor(context),
                         borderRadius: BorderRadius.circular(15),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.black.withOpacity(0.3) 
+                                : Colors.black.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           )
@@ -143,10 +146,10 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                           const SizedBox(height: 15),
                           Text(
                             category,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
+                              color: AppColors.getTextColor(context),
                             ),
                           ),
                         ],

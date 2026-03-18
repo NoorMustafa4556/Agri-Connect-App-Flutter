@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'utils/AppColors.dart';
 import 'utils/AssetManager.dart';
 import 'Providers/AuthProvider.dart';
+import 'Providers/ThemeProvider.dart';
 import 'Screens/Auth/SplashScreen.dart';
 
 void main() async {
@@ -25,21 +26,48 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'AgriConnect',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-          elevation: 0,
-        ),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'AgriConnect',
+            debugShowCheckedModeBanner: false,
+            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+              useMaterial3: true,
+              scaffoldBackgroundColor: AppColors.background,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                elevation: 0,
+              ),
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primary,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+              scaffoldBackgroundColor: AppColors.backgroundDark,
+              cardColor: AppColors.surfaceDark,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                elevation: 0,
+              ),
+              textTheme: const TextTheme(
+                bodyLarge: TextStyle(color: AppColors.textOnDark),
+                bodyMedium: TextStyle(color: AppColors.textOnDark),
+                titleLarge: TextStyle(color: AppColors.textOnDark),
+              ),
+            ),
+            home: const SplashScreen(),
+          );
+        },
       ),
-      home: const SplashScreen(),
-    ));
+    );
   }
 }
