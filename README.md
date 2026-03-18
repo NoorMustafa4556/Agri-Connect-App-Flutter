@@ -46,68 +46,74 @@ For many small to medium-scale farmers, purchasing heavy farm machinery is finan
 *Note: The following gallery contains sequential screenshots documenting the complete A-Z app flow.*
 
 <p align="center">
-  <img src="assets/images/1.png" width="24%" />
-  <img src="assets/images/2.png" width="24%" />
-  <img src="assets/images/3.png" width="24%" />
-  <img src="assets/images/4.png" width="24%" />
+  <img src="assets/images/1.png" width="32%" />
+  <img src="assets/images/2.png" width="32%" />
+  <img src="assets/images/3.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/5.png" width="24%" />
-  <img src="assets/images/6.png" width="24%" />
-  <img src="assets/images/7.png" width="24%" />
-  <img src="assets/images/8.png" width="24%" />
+  <img src="assets/images/4.png" width="32%" />
+  <img src="assets/images/5.png" width="32%" />
+  <img src="assets/images/6.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/9.png" width="24%" />
-  <img src="assets/images/10.png" width="24%" />
-  <img src="assets/images/11.png" width="24%" />
-  <img src="assets/images/12.png" width="24%" />
+  <img src="assets/images/7.png" width="32%" />
+  <img src="assets/images/8.png" width="32%" />
+  <img src="assets/images/9.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/13.png" width="24%" />
-  <img src="assets/images/14.png" width="24%" />
-  <img src="assets/images/15.png" width="24%" />
-  <img src="assets/images/16.png" width="24%" />
+  <img src="assets/images/10.png" width="32%" />
+  <img src="assets/images/11.png" width="32%" />
+  <img src="assets/images/12.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/17.png" width="24%" />
-  <img src="assets/images/18.png" width="24%" />
-  <img src="assets/images/19.png" width="24%" />
-  <img src="assets/images/20.png" width="24%" />
+  <img src="assets/images/13.png" width="32%" />
+  <img src="assets/images/14.png" width="32%" />
+  <img src="assets/images/15.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/21.png" width="24%" />
-  <img src="assets/images/22.png" width="24%" />
-  <img src="assets/images/23.png" width="24%" />
-  <img src="assets/images/24.png" width="24%" />
+  <img src="assets/images/16.png" width="32%" />
+  <img src="assets/images/17.png" width="32%" />
+  <img src="assets/images/18.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/25.png" width="24%" />
-  <img src="assets/images/26.png" width="24%" />
-  <img src="assets/images/27.png" width="24%" />
-  <img src="assets/images/28.png" width="24%" />
+  <img src="assets/images/19.png" width="32%" />
+  <img src="assets/images/20.png" width="32%" />
+  <img src="assets/images/21.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/29.png" width="24%" />
-  <img src="assets/images/30.png" width="24%" />
-  <img src="assets/images/31.png" width="24%" />
-  <img src="assets/images/32.png" width="24%" />
+  <img src="assets/images/22.png" width="32%" />
+  <img src="assets/images/23.png" width="32%" />
+  <img src="assets/images/24.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/33.png" width="24%" />
-  <img src="assets/images/34.png" width="24%" />
-  <img src="assets/images/35.png" width="24%" />
-  <img src="assets/images/36.png" width="24%" />
+  <img src="assets/images/25.png" width="32%" />
+  <img src="assets/images/26.png" width="32%" />
+  <img src="assets/images/27.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/37.png" width="24%" />
-  <img src="assets/images/38.png" width="24%" />
-  <img src="assets/images/39.png" width="24%" />
-  <img src="assets/images/40.png" width="24%" />
+  <img src="assets/images/28.png" width="32%" />
+  <img src="assets/images/29.png" width="32%" />
+  <img src="assets/images/30.png" width="32%" />
 </p>
 <p align="center">
-  <img src="assets/images/41.png" width="24%" />
-  <img src="assets/images/42.png" width="24%" />
+  <img src="assets/images/31.png" width="32%" />
+  <img src="assets/images/32.png" width="32%" />
+  <img src="assets/images/33.png" width="32%" />
+</p>
+<p align="center">
+  <img src="assets/images/34.png" width="32%" />
+  <img src="assets/images/35.png" width="32%" />
+  <img src="assets/images/36.png" width="32%" />
+</p>
+<p align="center">
+  <img src="assets/images/37.png" width="32%" />
+  <img src="assets/images/38.png" width="32%" />
+  <img src="assets/images/39.png" width="32%" />
+</p>
+<p align="center">
+  <img src="assets/images/40.png" width="32%" />
+  <img src="assets/images/41.png" width="32%" />
+  <img src="assets/images/42.png" width="32%" />
 </p>
 
 ---
