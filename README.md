@@ -157,6 +157,8 @@ lib/
 1.  **Clone the Repository**:
     ```bash
     git clone https://github.com/NoorMustafa4556/Agri-Connect-App-Flutter.git
+     ```
+     ```
     cd agri_connect_app
     ```
 2.  **Install Dependencies**:
