@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/AppColors.dart';
 import '../Shared/CustomDrawer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../utils/UIUtils.dart';
 import 'AddEquipmentScreen.dart';
 
 class OwnerDashboard extends StatefulWidget {
@@ -164,7 +166,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           .snapshots(),
                       builder: (context, snapshot) {
                          if (snapshot.connectionState == ConnectionState.waiting) {
-                           return const Center(child: CircularProgressIndicator());
+                           return ListView.builder(
+                             padding: const EdgeInsets.all(15),
+                             itemCount: 3,
+                             itemBuilder: (context, index) => Padding(
+                               padding: const EdgeInsets.only(bottom: 15),
+                               child: UIUtils.getShimmer(context, height: 150, borderRadius: 15),
+                             ),
+                           );
                          }
                          if (snapshot.hasError) {
                            if (snapshot.error.toString().contains('index')) {
@@ -192,7 +201,14 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                           .snapshots(),
                       builder: (context, snapshot) {
                          if (snapshot.connectionState == ConnectionState.waiting) {
-                           return const Center(child: CircularProgressIndicator());
+                           return ListView.builder(
+                             padding: const EdgeInsets.all(15),
+                             itemCount: 3,
+                             itemBuilder: (context, index) => Padding(
+                               padding: const EdgeInsets.only(bottom: 15),
+                               child: UIUtils.getShimmer(context, height: 80, borderRadius: 15),
+                             ),
+                           );
                          }
                          if (snapshot.hasError) {
                            return Center(child: Text('Error: ${snapshot.error}'));
@@ -439,10 +455,20 @@ class _OwnerDashboardState extends State<OwnerDashboard> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: assetRef != null && assetRef.isNotEmpty 
-                          ? Image.asset(assetRef, fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, st) => const Icon(Icons.agriculture, color: AppColors.primary))
-                          : const Icon(Icons.agriculture, color: AppColors.primary, size: 30),
+                      child: assetRef != null && assetRef.isNotEmpty
+                          ? (assetRef.startsWith('http')
+                              ? CachedNetworkImage(
+                                  imageUrl: assetRef,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => UIUtils.getShimmer(context),
+                                  errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, color: AppColors.textLight),
+                                )
+                              : Image.asset(
+                                  assetRef,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, color: AppColors.textLight),
+                                ))
+                          : const Icon(Icons.agriculture, size: 40, color: AppColors.primary),
                     ),
                  ),
                  const SizedBox(width: 15),

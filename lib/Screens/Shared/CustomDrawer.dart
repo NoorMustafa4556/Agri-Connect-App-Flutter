@@ -10,6 +10,7 @@ import 'ChangePasswordScreen.dart';
 import '../Farmer/FarmerHistoryScreen.dart';
 import '../Owner/OwnerHistoryScreen.dart';
 import '../../Providers/ThemeProvider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomDrawer extends StatelessWidget {
   final bool isFarmer;
@@ -34,10 +35,24 @@ class CustomDrawer extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 accountEmail: Text(email),
-                currentAccountPicture: const CircleAvatar(
-                  backgroundColor: AppColors.white,
-                  child: Icon(Icons.person, color: AppColors.primary, size: 40),
-                ),
+                currentAccountPicture: auth.profileImageUrl != null
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: auth.profileImageUrl!,
+                          fit: BoxFit.cover,
+                          width: 80,
+                          height: 80,
+                          placeholder: (context, url) => const CircularProgressIndicator(color: AppColors.white),
+                          errorWidget: (context, url, error) => const CircleAvatar(
+                            backgroundColor: AppColors.white,
+                            child: Icon(Icons.person, color: AppColors.primary, size: 40),
+                          ),
+                        ),
+                      )
+                    : const CircleAvatar(
+                        backgroundColor: AppColors.white,
+                        child: Icon(Icons.person, color: AppColors.primary, size: 40),
+                      ),
               );
             },
           ),

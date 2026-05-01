@@ -1,10 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../utils/AppColors.dart';
 import '../../utils/AssetManager.dart';
 import '../../Providers/AuthProvider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../utils/UIUtils.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -30,63 +35,79 @@ class ProfileScreen extends StatelessWidget {
       ),
       body: Consumer<AuthProvider>(
         builder: (context, auth, child) {
-              if (auth.user == null) {
-                return const Center(child: Text("Please login to view profile."));
-              }
+          if (auth.user == null) {
+            return const Center(child: Text("Please login to view profile."));
+          }
 
-              final String name = auth.userName ?? 'User';
-              final String email = auth.user!.email ?? 'Unknown Email';
-              
-              return FutureBuilder<Map<String, dynamic>?>(
-                future: auth.getUserData(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-              final userData = snapshot.data ?? {};
-              final String phone = userData['phone'] ?? 'Not provided';
-              final String city = userData['city'] ?? 'Unknown location';
-              final String role = userData['role'] ?? 'Unknown role';
-
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Banner & Avatar
-                    Container(
-                      width: double.infinity,
-                      color: AppColors.primary,
-                      padding: const EdgeInsets.only(bottom: 30, top: 10),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: AppColors.white,
-                            child: CircleAvatar(
-                              radius: 56,
-                              backgroundColor: AppColors.primaryLight,
-                              child: const Icon(Icons.person, size: 60, color: AppColors.white),
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(email, style: const TextStyle(color: Colors.white70)),
-                        ],
+          final String name = auth.userName ?? 'User';
+          final String email = auth.user!.email ?? 'Unknown Email';
+          final String phone = auth.userRole != null ? (auth.userRole == 'Farmer' ? 'Farmer Account' : 'Owner Account') : 'Loading...'; // Placeholder while we check if we have more
+          
+          // Use a local helper to get full data if needed, or just use provider fields
+          // Since AuthProvider already fetches name, role, and image in its constructor,
+          // we can use those directly for a "fast" feel.
+          
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // Banner & Avatar
+                Container(
+                  width: double.infinity,
+                  color: AppColors.primary,
+                  padding: const EdgeInsets.only(bottom: 30, top: 10),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: AppColors.white,
+                        child: auth.profileImageUrl != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: auth.profileImageUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 112,
+                                  height: 112,
+                                  placeholder: (context, url) => UIUtils.getShimmer(context, borderRadius: 60),
+                                  errorWidget: (context, url, error) => const CircleAvatar(
+                                    radius: 56,
+                                    backgroundColor: AppColors.primaryLight,
+                                    child: Icon(Icons.person, size: 60, color: AppColors.white),
+                                  ),
+                                ),
+                              )
+                            : const CircleAvatar(
+                                radius: 56,
+                                backgroundColor: AppColors.primaryLight,
+                                child: Icon(Icons.person, size: 60, color: AppColors.white),
+                              ),
                       ),
-                    ),
-                    
-                    const SizedBox(height: 30),
-                    
-                    // Info Cards
-                    Padding(
+                      const SizedBox(height: 15),
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(email, style: const TextStyle(color: Colors.white70)),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 30),
+                
+                // Info Cards - We still might need city and phone from a deeper fetch if not in provider
+                FutureBuilder<Map<String, dynamic>?>(
+                  future: auth.getUserData(),
+                  builder: (context, snapshot) {
+                    final userData = snapshot.data ?? {};
+                    final String displayPhone = userData['phone'] ?? '...';
+                    final String displayCity = userData['city'] ?? '...';
+                    final String displayRole = userData['role'] ?? auth.userRole ?? '...';
+
+                    return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
                         decoration: BoxDecoration(
@@ -102,19 +123,19 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: Column(
                           children: [
-                            _buildInfoTile(context, Icons.phone, 'Phone', phone),
+                            _buildInfoTile(context, Icons.phone, 'Phone', displayPhone),
                             const Divider(height: 1),
-                            _buildInfoTile(context, Icons.location_city, 'City', city),
+                            _buildInfoTile(context, Icons.location_city, 'City', displayCity),
                             const Divider(height: 1),
-                            _buildInfoTile(context, Icons.agriculture, 'Account Role', role),
+                            _buildInfoTile(context, Icons.agriculture, 'Account Role', displayRole),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  }
                 ),
-              );
-            }
+              ],
+            ),
           );
         },
       ),
@@ -152,6 +173,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _phoneController = TextEditingController();
   String? _selectedCity;
   bool _isLoading = true;
+  String? _existingProfileImageUrl;
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickProfileImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _profileImage = File(image.path);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -166,6 +199,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _nameController.text = userData['fullName'] ?? '';
       _phoneController.text = userData['phone'] ?? '';
       _selectedCity = userData['city'];
+      _existingProfileImageUrl = userData['profileImageUrl'];
     }
     setState(() => _isLoading = false);
   }
@@ -184,12 +218,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isLoading = true);
     try {
+      String? updatedImageUrl = _existingProfileImageUrl;
+
+      // Upload new image if selected
+      if (_profileImage != null) {
+        String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        Reference storageRef = FirebaseStorage.instance.ref().child('profile_images').child(uid).child(fileName);
+        UploadTask uploadTask = storageRef.putFile(_profileImage!);
+        TaskSnapshot storageSnapshot = await uploadTask;
+        updatedImageUrl = await storageSnapshot.ref.getDownloadURL();
+      }
+
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'fullName': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'city': _selectedCity,
+        if (updatedImageUrl != null) 'profileImageUrl': updatedImageUrl,
       });
+
       if (mounted) {
+        await Provider.of<AuthProvider>(context, listen: false).refreshUserData();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile Updated Successfully')));
       }
@@ -213,20 +261,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
          padding: const EdgeInsets.all(20),
          child: Column(
            children: [
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.primaryLight,
-                    child: const Icon(Icons.person, size: 50, color: AppColors.white),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: const Icon(Icons.camera_alt, color: AppColors.white, size: 18),
-                  )
-                ],
+              GestureDetector(
+                onTap: _pickProfileImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.primaryLight,
+                      child: _profileImage != null
+                          ? ClipOval(
+                              child: Image.file(_profileImage!, width: 100, height: 100, fit: BoxFit.cover),
+                            )
+                          : (_existingProfileImageUrl != null
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: _existingProfileImageUrl!,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => UIUtils.getShimmer(context, borderRadius: 50),
+                                    errorWidget: (context, url, error) => const Icon(Icons.person, size: 50, color: AppColors.white),
+                                  ),
+                                )
+                              : const Icon(Icons.person, size: 50, color: AppColors.white)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                      child: const Icon(Icons.camera_alt, color: AppColors.white, size: 18),
+                    )
+                  ],
+                ),
               ),
               const SizedBox(height: 30),
               _buildTextField('Full Name', 'Enter your name', _nameController),

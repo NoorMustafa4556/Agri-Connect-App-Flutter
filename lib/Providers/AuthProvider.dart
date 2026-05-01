@@ -8,11 +8,13 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   String? _userRole;
   String? _userName;
+  String? _profileImageUrl;
   bool _isLoading = false;
 
   User? get user => _user;
   String? get userRole => _userRole;
   String? get userName => _userName;
+  String? get profileImageUrl => _profileImageUrl;
   bool get isLoading => _isLoading;
 
   AuthProvider() {
@@ -23,9 +25,11 @@ class AuthProvider extends ChangeNotifier {
         final data = await _authService.getUserData(user.uid);
         _userRole = data?['role'];
         _userName = data?['fullName'];
+        _profileImageUrl = data?['profileImageUrl'];
       } else {
         _userRole = null;
         _userName = null;
+        _profileImageUrl = null;
       }
       notifyListeners();
     });
@@ -86,5 +90,15 @@ class AuthProvider extends ChangeNotifier {
   Future<Map<String, dynamic>?> getUserData() async {
     if (_user == null) return null;
     return await _authService.getUserData(_user!.uid);
+  }
+
+  Future<void> refreshUserData() async {
+    if (_user != null) {
+      final data = await _authService.getUserData(_user!.uid);
+      _userRole = data?['role'];
+      _userName = data?['fullName'];
+      _profileImageUrl = data?['profileImageUrl'];
+      notifyListeners();
+    }
   }
 }

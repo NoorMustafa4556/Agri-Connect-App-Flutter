@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../utils/AppColors.dart';
 import '../../utils/AssetManager.dart';
 import '../../Providers/AuthProvider.dart';
@@ -31,9 +34,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
   
   // Dropdown States
   String? _selectedArea;
-  String? _selectedEquipmentName; // Extracted as category in AssetManager
+  String? _selectedEquipmentName; 
   String? _selectedEquipmentType;
-  String? _selectedEquipmentImageRef;
+  File? _selectedEquipmentImage;
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickProfileImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _profileImage = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _pickEquipmentImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _selectedEquipmentImage = File(image.path);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -56,8 +79,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
 
     if (!isFarmer) {
-      if (_selectedEquipmentName == null || _selectedEquipmentType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select equipment details.')));
+      if (_selectedEquipmentName == null || _selectedEquipmentType == null || _selectedEquipmentImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select equipment details and an image.')));
         return;
       }
     }
@@ -73,17 +96,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
         context: context,
       );
 
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId != null && _profileImage != null) {
+        String fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        Reference storageRef = FirebaseStorage.instance.ref().child('profile_images').child(userId).child(fileName);
+        UploadTask uploadTask = storageRef.putFile(_profileImage!);
+        TaskSnapshot storageSnapshot = await uploadTask;
+        String profileImageUrl = await storageSnapshot.ref.getDownloadURL();
+
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+          'profileImageUrl': profileImageUrl,
+        });
+        if (mounted) {
+          await context.read<AuthProvider>().refreshUserData();
+        }
+      }
+
       // If Owner, save the initial equipment directly to Firestore collection
-      if (!isFarmer && _selectedEquipmentName != null) {
-        final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (!isFarmer && _selectedEquipmentName != null && _selectedEquipmentImage != null) {
         if (userId != null) {
+          // Upload image to Firebase Storage
+          String fileName = 'equipment_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          Reference storageRef = FirebaseStorage.instance.ref().child('equipment_images').child(userId).child(fileName);
+          UploadTask uploadTask = storageRef.putFile(_selectedEquipmentImage!);
+          TaskSnapshot storageSnapshot = await uploadTask;
+          String downloadUrl = await storageSnapshot.ref.getDownloadURL();
+
           await FirebaseFirestore.instance.collection('equipment').add({
              'ownerId': userId,
              'ownerName': _nameController.text.trim(),
              'name': '${_selectedEquipmentName} ($_selectedEquipmentType)',
              'category': _selectedEquipmentName,
              'city': _selectedArea,
-             'assetImageRef': _selectedEquipmentImageRef ?? AssetManager.getEquipmentImage(_selectedEquipmentName!),
+             'assetImageRef': downloadUrl,
              'pricePerDay': _rentController.text.trim(),
              'specs': 'Listed during registration',
              'createdAt': FieldValue.serverTimestamp(),
@@ -121,23 +167,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
           children: [
             const SizedBox(height: 20),
             // Profile image placeholder
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppColors.getCardColor(context),
-                  child: Icon(Icons.camera_alt, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
+            GestureDetector(
+              onTap: _pickProfileImage,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: AppColors.getCardColor(context),
+                    backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                    child: _profileImage == null
+                        ? Icon(Icons.camera_alt, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)
+                        : null,
                   ),
-                  child: const Icon(Icons.add, color: AppColors.white, size: 20),
-                )
-              ],
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, color: AppColors.white, size: 20),
+                  )
+                ],
+              ),
             ),
             const SizedBox(height: 30),
 
@@ -261,7 +313,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         onChanged: (val) {
                           setState(() {
                             _selectedEquipmentName = val;
-                            _selectedEquipmentImageRef = null; // Reset image when category changes
                           });
                         },
                       ),
@@ -290,60 +341,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       
                       // Dynamic Image Gallery for Owner Equipment
-                      if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isNotEmpty) ...[
-                        const SizedBox(height: 15),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text('Select Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.getTextColor(context))),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          height: 100,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: AssetManager.getImagesForCategory(_selectedEquipmentName!).length,
-                            itemBuilder: (context, index) {
-                              String imagePath = AssetManager.getImagesForCategory(_selectedEquipmentName!)[index];
-                              bool isSelected = _selectedEquipmentImageRef == imagePath;
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedEquipmentImageRef = imagePath;
-                                  });
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(right: 10),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: isSelected ? AppColors.primary : Colors.transparent,
-                                      width: 3,
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(7),
-                                    child: Image.asset(
-                                      imagePath,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Container(
-                                        width: 100,
-                                        color: Colors.grey[300],
-                                        child: const Icon(Icons.image_not_supported),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                      const SizedBox(height: 15),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Equipment Image:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.getTextColor(context))),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: _pickEquipmentImage,
+                        child: Container(
+                          height: 150,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColors.getCardColor(context),
+                            border: Border.all(color: AppColors.primary, width: 1),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        )
-                      ],
-                      if (_selectedEquipmentName != null && AssetManager.getImagesForCategory(_selectedEquipmentName!).isEmpty) ...[
-                        const SizedBox(height: 10),
-                        Text('No images found in assets/images/$_selectedEquipmentName', style: const TextStyle(color: Colors.red)),
-                      ]
+                          child: _selectedEquipmentImage != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.file(_selectedEquipmentImage!, fit: BoxFit.cover),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_a_photo, size: 40, color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight),
+                                    const SizedBox(height: 10),
+                                    Text('Tap to upload image', style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? AppColors.textGrey : AppColors.textLight)),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
                     ],
 
                     const SizedBox(height: 15),

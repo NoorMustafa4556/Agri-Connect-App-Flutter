@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../utils/AppColors.dart';
 import '../../utils/AssetManager.dart';
 import 'EquipmentDetailsScreen.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../utils/UIUtils.dart';
 class SearchEquipmentScreen extends StatefulWidget {
   final String category;
   final String initialCity;
@@ -100,7 +101,14 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    itemCount: 5,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 15),
+                      child: UIUtils.getShimmer(context, height: 120, borderRadius: 15),
+                    ),
+                  );
                 }
                 
                 if (snapshot.hasError) {
@@ -164,10 +172,20 @@ class _SearchEquipmentScreenState extends State<SearchEquipmentScreen> {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: assetRef != null && assetRef.isNotEmpty 
-                                  ? Image.asset(assetRef, fit: BoxFit.cover,
-                                      errorBuilder: (ctx, err, st) => const Icon(Icons.agriculture, color: AppColors.primary))
-                                  : const Icon(Icons.agriculture, color: AppColors.primary, size: 40),
+                              child: assetRef != null && assetRef.isNotEmpty
+                                  ? (assetRef.startsWith('http')
+                                      ? CachedNetworkImage(
+                                          imageUrl: assetRef,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => UIUtils.getShimmer(context),
+                                          errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, color: AppColors.textLight),
+                                        )
+                                      : Image.asset(
+                                          assetRef,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, color: AppColors.textLight),
+                                        ))
+                                  : const Icon(Icons.agriculture, size: 40, color: AppColors.primary),
                             ),
                           ),
                           const SizedBox(width: 15),

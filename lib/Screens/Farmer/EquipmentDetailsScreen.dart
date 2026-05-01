@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/AppColors.dart';
 import '../../utils/AssetManager.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../utils/UIUtils.dart';
 
 class EquipmentDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> equipmentData;
@@ -61,46 +63,79 @@ class EquipmentDetailsScreen extends StatelessWidget {
           final email = ownerDoc['email'] ?? 'Not provided';
           final phone = ownerDoc['phone'] ?? 'Not provided';
           final city = equipmentData['city'] ?? ownerDoc['city'] ?? 'Unknown';
+          final String? profileImageUrl = ownerDoc['profileImageUrl'];
 
           return SingleChildScrollView(
             child: Column(
               children: [
-                // Top Banner with Avatar
+                // Equipment Image Header
                 Container(
                   width: double.infinity,
-                  color: AppColors.primary,
-                  padding: const EdgeInsets.only(bottom: 30, top: 20),
+                  height: 250,
+                  color: Theme.of(context).dividerColor,
+                  child: equipmentData['assetImageRef'] != null && equipmentData['assetImageRef'].toString().isNotEmpty
+                      ? (equipmentData['assetImageRef'].toString().startsWith('http')
+                          ? CachedNetworkImage(
+                              imageUrl: equipmentData['assetImageRef'],
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => UIUtils.getShimmer(context),
+                              errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, size: 50),
+                            )
+                          : Image.asset(equipmentData['assetImageRef'], fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 50)))
+                      : const Icon(Icons.agriculture, size: 80, color: AppColors.primary),
+                ),
+
+                // Owner Profile Info
+                Container(
+                  width: double.infinity,
+                  transform: Matrix4.translationValues(0, -30, 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
                       CircleAvatar(
-                        radius: 60,
+                        radius: 50,
                         backgroundColor: AppColors.white,
-                        child: CircleAvatar(
-                          radius: 56,
-                          backgroundColor: AppColors.primaryLight,
-                          child: const Icon(Icons.person, size: 60, color: AppColors.white),
-                        ),
+                        child: profileImageUrl != null
+                            ? ClipOval(
+                                child: CachedNetworkImage(
+                                  imageUrl: profileImageUrl,
+                                  fit: BoxFit.cover,
+                                  width: 92,
+                                  height: 92,
+                                  placeholder: (context, url) => UIUtils.getShimmer(context, borderRadius: 50),
+                                  errorWidget: (context, url, error) => const CircleAvatar(
+                                    radius: 46,
+                                    backgroundColor: AppColors.primaryLight,
+                                    child: Icon(Icons.person, size: 50, color: AppColors.white),
+                                  ),
+                                ),
+                              )
+                            : const CircleAvatar(
+                                radius: 46,
+                                backgroundColor: AppColors.primaryLight,
+                                child: Icon(Icons.person, size: 50, color: AppColors.white),
+                              ),
                       ),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 10),
                       Text(
                         ownerName,
-                        style: const TextStyle(
-                          fontSize: 26,
+                        style: TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.white,
+                          color: AppColors.getTextColor(context),
                         ),
                       ),
                       const SizedBox(height: 5),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.white.withOpacity(0.1) : AppColors.white,
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           '$category • $price',
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark ? AppColors.white : AppColors.primary,
+                          style: const TextStyle(
+                            color: AppColors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
